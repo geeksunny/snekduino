@@ -1,5 +1,10 @@
 #include <Arduino.h>
 #include "FastLED.h"
+#include "qmk.h"
+
+extern "C" {
+#include "snek.inc"
+}
 
 CRGB leds[NUM_LEDS];
 
@@ -24,6 +29,9 @@ void setup() {
   currentPalette = RainbowColors_p;
   currentBlending = LINEARBLEND;
 
+  // Init Snake Game
+  snake_init();
+
   Serial.println("setup() completed.");
 }
 
@@ -35,4 +43,6 @@ void loop() {
 
   FastLED.show();
   FastLED.delay(1000 / REFRESH_RATE);
+
+  snake_exec();
 }

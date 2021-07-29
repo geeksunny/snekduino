@@ -1,0 +1,9 @@
+{
+  "IS_DEBUG_MODE": "",
+  "LED_PIN": 5,
+  "NUM_LEDS": 70,
+  "BRIGHTNESS": 64,
+  "LED_TYPE": "`WS2812B`",
+  "COLOR_ORDER": "`GRB`",
+  "REFRESH_RATE": 100
+}

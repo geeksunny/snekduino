@@ -3,7 +3,7 @@
 
 /** Snake & Queue data types, values, constants **/
 #define GRID_HEIGHT 5
-#define GRID_WIDTH 10
+#define GRID_WIDTH 14
 
 #define MAX_QUEUE_SIZE GRID_HEIGHT * GRID_WIDTH
 #define MAX_LIST_SIZE MAX_QUEUE_SIZE
@@ -164,7 +164,7 @@ list_node_t* ec_list_get_node(uint8_t list_index) {
   }
   list_node_t* focused_node;
   // todo: share search logic from both directions below (using inline function(s)); also above version
-  if (list_index / empty_cell_list_.count > 0.5) {
+  if ((float(list_index) / empty_cell_list_.count) > 0.5) {
     // list_index is closer to empty_cell_list_.tail; Traverse backwards.
     focused_node = empty_cell_list_.tail;
     for (uint8_t i = empty_cell_list_.count-1; i >= 0; --i) {
@@ -292,7 +292,16 @@ void snake_init() {
     xy = index_to_grid_point(i);
     empty_cell_pool_[i] = {&grid_[xy.x][xy.y], nullptr, nullptr};
   }
-  empty_cell_list_ = {empty_cell_pool_, nullptr, nullptr};
+  // re-loop to link nodes
+  list_node_t* prev_node = nullptr;
+  list_node_t* next_node = nullptr;
+  for (int i = 0; i < MAX_LIST_SIZE; ++i) {
+    next_node = ((i + 1) != MAX_LIST_SIZE) ? &empty_cell_pool_[i+1] : nullptr;
+    empty_cell_pool_[i].next = next_node;
+    empty_cell_pool_[i].prev = prev_node;
+    prev_node = &empty_cell_pool_[i];
+  }
+  empty_cell_list_ = {empty_cell_pool_, &empty_cell_pool_[0], &empty_cell_pool_[MAX_LIST_SIZE-1], MAX_LIST_SIZE};
 }
 
 bool place_segment(snake_t *segment, uint8_t x, uint8_t y) {

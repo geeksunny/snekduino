@@ -271,11 +271,27 @@ bool ec_list_remove(uint8_t* list_index) {
   return ec_list_remove_cell_node(node);
 }
 
+void ec_list_reset_filled() {
+  // loop empty cell pool to link each node
+  list_node_t* prev_node = nullptr;
+  list_node_t* next_node = nullptr;
+  for (int i = 0; i < MAX_LIST_SIZE; ++i) {
+    next_node = ((i + 1) != MAX_LIST_SIZE) ? &empty_cell_pool_[i+1] : nullptr;
+    empty_cell_pool_[i].next = next_node;
+    empty_cell_pool_[i].prev = prev_node;
+    prev_node = &empty_cell_pool_[i];
+  }
+  // Reset list head / tail / count
+  empty_cell_list_.head = &empty_cell_pool_[0];
+  empty_cell_list_.tail = &empty_cell_pool_[MAX_LIST_SIZE-1];
+  empty_cell_list_.count = MAX_LIST_SIZE;
+}
+
 
 /** Snake game logic functions **/
 void snake_init() {
   // Init rand()
-  srand(time(nullptr));
+  srand(analogRead(0));
   // Init snake cell queue struct
   snake_queue_ = sn_queue_init(snake_arr_);
   // todo : segment these blocks out into inline functions for organization?
@@ -292,16 +308,8 @@ void snake_init() {
     xy = index_to_grid_point(i);
     empty_cell_pool_[i] = {&grid_[xy.x][xy.y], nullptr, nullptr};
   }
-  // re-loop to link nodes
-  list_node_t* prev_node = nullptr;
-  list_node_t* next_node = nullptr;
-  for (int i = 0; i < MAX_LIST_SIZE; ++i) {
-    next_node = ((i + 1) != MAX_LIST_SIZE) ? &empty_cell_pool_[i+1] : nullptr;
-    empty_cell_pool_[i].next = next_node;
-    empty_cell_pool_[i].prev = prev_node;
-    prev_node = &empty_cell_pool_[i];
-  }
-  empty_cell_list_ = {empty_cell_pool_, &empty_cell_pool_[0], &empty_cell_pool_[MAX_LIST_SIZE-1], MAX_LIST_SIZE};
+  empty_cell_list_ = {empty_cell_pool_, nullptr, nullptr, 0};
+  ec_list_reset_filled();
 }
 
 bool place_segment(snake_t *segment, uint8_t x, uint8_t y) {

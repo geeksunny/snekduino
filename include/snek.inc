@@ -63,20 +63,29 @@ typedef struct list_t {
 static snake_t grid_[GRID_WIDTH][GRID_HEIGHT];  // grid_[x][y]
 static snake_t* snake_arr_[MAX_QUEUE_SIZE];
 static queue_t snake_queue_;
-// TODO: Remove this led_map_ for ergodox/moonlander, replace with macros for automated mapping with vertical|horizontal and wrapping options
-static const snake_t* led_map_[48] = {
-    // Right side
-    &grid_[9][0], &grid_[8][0], &grid_[7][0], &grid_[6][0], &grid_[5][0],
-    &grid_[9][1], &grid_[8][1], &grid_[7][1], &grid_[6][1], &grid_[5][1],
-    &grid_[9][2], &grid_[8][2], &grid_[7][2], &grid_[6][2], &grid_[5][2],
-    &grid_[9][3], &grid_[8][3], &grid_[7][3], &grid_[6][3], &grid_[5][3],
-    &grid_[9][4], &grid_[8][4], &grid_[7][4], &grid_[6][4],
-    // Left side
+// TODO: Can this led_map_ be removed in favor of compile-time generation? Including orientation & wrapping options
+//  - is const needed here?
+static const snake_t* led_map_[MAX_QUEUE_SIZE] = {
+    // Row 1
     &grid_[0][0], &grid_[1][0], &grid_[2][0], &grid_[3][0], &grid_[4][0],
-    &grid_[0][1], &grid_[1][1], &grid_[2][1], &grid_[3][1], &grid_[4][1],
+    &grid_[5][0], &grid_[6][0], &grid_[7][0], &grid_[8][0], &grid_[9][0],
+    &grid_[10][0], &grid_[11][0], &grid_[12][0], &grid_[13][0],
+    // Row 2
+    &grid_[13][1], &grid_[12][1], &grid_[11][1], &grid_[10][1],
+    &grid_[9][1], &grid_[8][1], &grid_[7][1], &grid_[6][1], &grid_[5][1],
+    &grid_[4][1], &grid_[3][1], &grid_[2][1], &grid_[1][1], &grid_[0][1],
+    // Row 3
     &grid_[0][2], &grid_[1][2], &grid_[2][2], &grid_[3][2], &grid_[4][2],
-    &grid_[0][3], &grid_[1][3], &grid_[2][3], &grid_[3][3], &grid_[4][3],
-    &grid_[0][4], &grid_[1][4], &grid_[2][4], &grid_[3][4]
+    &grid_[5][2], &grid_[6][2], &grid_[7][2], &grid_[8][2], &grid_[9][2],
+    &grid_[10][2], &grid_[11][2], &grid_[12][2], &grid_[13][2],
+    // Row 4
+    &grid_[13][3], &grid_[12][3], &grid_[11][3], &grid_[10][3],
+    &grid_[9][3], &grid_[8][3], &grid_[7][3], &grid_[6][3], &grid_[5][3],
+    &grid_[4][3], &grid_[3][3], &grid_[2][3], &grid_[1][3], &grid_[0][3],
+    // Row 5
+    &grid_[0][4], &grid_[1][4], &grid_[2][4], &grid_[3][4], &grid_[4][4],
+    &grid_[5][4], &grid_[6][4], &grid_[7][4], &grid_[8][4], &grid_[9][4],
+    &grid_[10][4], &grid_[11][4], &grid_[12][4], &grid_[13][4]
 };
 /** Empty node list **/
 static list_node_t empty_cell_pool_[MAX_LIST_SIZE];
@@ -309,7 +318,6 @@ void snake_init() {
     empty_cell_pool_[i] = {&grid_[xy.x][xy.y], nullptr, nullptr};
   }
   empty_cell_list_ = {empty_cell_pool_, nullptr, nullptr, 0};
-  ec_list_reset_filled();
 }
 
 bool place_segment(snake_t *segment, uint8_t x, uint8_t y) {
@@ -356,14 +364,15 @@ static inline void extend_tick_length() {
 }
 
 void reset() {
-  //  reset the grid nodes
+  // reset the grid nodes
   for (uint8_t x = 0; x < GRID_WIDTH; ++x) {
     for (uint8_t y = 0; y < GRID_HEIGHT; ++y) {
       grid_[x][y].is_enabled = 0;
       grid_[x][y].is_food = 0;
     }
   }
-  // TODO: NEEDS REVAMP AFTER FIFO QUEUE IS INTRODUCED
+  // reset empty cell list
+  ec_list_reset_filled();
   // place food
 //    place_segment(&food_, 1, 5);
 //    // reset snake length

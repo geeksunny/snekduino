@@ -51,6 +51,7 @@ typedef struct list_t {
 
 /** Forward declarations of functions **/
 // todo: generate these from find-all with a regex
+void snake_render();
 //point_t index_to_grid_point(uint8_t index);
 //uint8_t xy_to_index(uint8_t x, uint8_t y);
 //queue_t sn_queue_init(snake_t** array_ptr);
@@ -505,6 +506,7 @@ void handle_tick() {
 void snake_exec() {
   if (millis() - last_tick_ >= tick_length_) {
     handle_tick();
+    snake_render();
   }
   // todo: render LEDs out from led_map_ as a normal RGB effect.
   //  * look into logic to reduce redundant color calls... if a color is already displayed, skip it.(right?)
@@ -512,4 +514,27 @@ void snake_exec() {
 
 
 /** RGB Animation code **/
-// Right now this lives in main.cpp::SnakeEffect
+void snake_render() {
+  // Temporarily renders a text version of the grid to Serial for game logic development
+  Serial.println();
+  for (int y = 0; y < GRID_HEIGHT; ++y) {
+    for (int x = 0; x < GRID_WIDTH; ++x) {
+      if (grid_[x][y].is_enabled) {
+        if (grid_[x][y].is_food) {
+          Serial.print('F');
+        } else {
+          if (&grid_[x][y] == snake_queue_.array[snake_queue_.front]) {
+            Serial.print('H');
+          } else if (&grid_[x][y] == snake_queue_.array[snake_queue_.rear]) {
+            Serial.print('T');
+          } else {
+            Serial.print('B');
+          }
+        }
+      } else {
+        Serial.print(' ');
+      }
+    }
+    Serial.println(';');
+  }
+}

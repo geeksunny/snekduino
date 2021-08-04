@@ -12,7 +12,7 @@
 #define TICK_MS_RESET 5000
 
 enum Direction {
-  UP, DOWN, LEFT, RIGHT
+  NONE, UP, LEFT, DOWN, RIGHT
 };
 
 enum GameState {
@@ -92,6 +92,7 @@ static list_node_t empty_cell_pool_[MAX_LIST_SIZE];
 static list_t empty_cell_list_;
 
 static enum Direction direction_;
+static enum Direction next_direction_ = NONE;
 static enum GameState game_state_ = RESET;
 
 static unsigned long last_tick_ = 0;
@@ -298,6 +299,10 @@ void ec_list_reset_filled() {
 
 
 /** Snake game logic functions **/
+void snake_set_next_direction(Direction next_direction) {
+  next_direction_ = next_direction;
+}
+
 void snake_init() {
   // Init rand()
   srand(analogRead(0));
@@ -410,6 +415,13 @@ void eat_food(snake_t* food_loc) {
 }
 
 bool handle_move() {
+  // Process next direction
+  if (next_direction_ != NONE) {
+    if (next_direction_ != direction_ && ((next_direction_ % 2) != (direction_ % 2))) {
+      direction_ = next_direction_;
+    }
+    next_direction_ = NONE;
+  }
   // Is the next move valid?
   snake_t* head = sn_queue_peek_rear();
   uint8_t nextX, nextY;

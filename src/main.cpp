@@ -100,19 +100,18 @@ void loop() {
   inputKey = readInput();
   switch (inputKey) {
     case KeyboardInput::UP:
-      Serial.println("UP ARROW PRESSED!");
+      snake_set_next_direction(UP);
       break;
     case KeyboardInput::DOWN:
-      Serial.println("DOWN ARROW PRESSED!");
+      snake_set_next_direction(DOWN);
       break;
     case KeyboardInput::LEFT:
-      Serial.println("LEFT ARROW PRESSED!");
+      snake_set_next_direction(LEFT);
       break;
     case KeyboardInput::RIGHT:
-      Serial.println("RIGHT ARROW PRESSED!");
+      snake_set_next_direction(RIGHT);
       break;
     case KeyboardInput::INVALID:
-      Serial.println("INVALID INPUT.");
       break;
     case KeyboardInput::NONE:
       break;

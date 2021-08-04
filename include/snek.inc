@@ -2,8 +2,9 @@
 #include <time.h>
 
 /** Snake & Queue data types, values, constants **/
-#define GRID_HEIGHT 5
-#define GRID_WIDTH 14
+#define GRID_HEIGHT       5
+#define GRID_WIDTH        14
+#define NEW_SNAKE_LENGTH  3
 
 #define MAX_QUEUE_SIZE GRID_HEIGHT * GRID_WIDTH
 #define MAX_LIST_SIZE MAX_QUEUE_SIZE
@@ -345,18 +346,84 @@ bool place_segment(snake_t *segment, uint8_t x, uint8_t y) {
     return false;
 }
 
-snake_t* pick_next_food_loc() {
+list_node_t* get_random_empty_cell() {
   uint8_t index = rand() % empty_cell_list_.count;
-  // TODO: Test if the node at `index` is too close to snake??
-  list_node_t* node = ec_list_get_node(index);
+  return ec_list_get_node(index);
+}
+
+snake_t* pick_next_food_loc() {
+  // TODO: Test if the node is too close to snake??
+  list_node_t* node = get_random_empty_cell();
   ec_list_remove_cell_node(node);
   return node->data;
 }
 
-bool create_snake(uint8_t x, uint8_t y, uint8_t length, Direction direction) {
-  // TODO: Create snake segments, return false if doesn't fit in bounds.
-  //  ... Work out a wrapped snake if near the corner
-  return true;
+bool create_snake() {
+  // Random cell for snake to be focused at.
+  list_node_t *snake_node = get_random_empty_cell();
+  // Initial snake direction
+#if GRID_WIDTH > GRID_HEIGHT
+  // Horizontal placement
+  direction_ = (snake_node->data->x > (GRID_WIDTH / 2)) ? LEFT : RIGHT;
+#elif GRID_WIDTH == GRID_HEIGHT
+  bool use_horizontal = rand() % 1;
+  if (use_horizontal) {
+    // Horizontal placement
+    direction_ = (snake_node->data->x > (GRID_WIDTH / 2)) ? LEFT : RIGHT;
+  } else {
+    // Vertical placement
+    direction_ = (snake_node->data->y > (GRID_HEIGHT / 2)) ? UP : DOWN;
+  }
+#else
+  // Vertical placement
+  direction_ = (snake_node->data->y > (GRID_HEIGHT / 2)) ? UP : DOWN;
+#endif
+  // Tail check
+  int8_t tail_offset_x;
+  int8_t tail_offset_y;
+  switch (direction_) {
+    case UP:
+      tail_offset_x = 0;
+      tail_offset_y = 1;
+      break;
+    case LEFT:
+      tail_offset_x = -1;
+      tail_offset_y = 0;
+      break;
+    case DOWN:
+      tail_offset_x = 0;
+      tail_offset_y = -1;
+      break;
+    case RIGHT:
+      tail_offset_x = 1;
+      tail_offset_y = 0;
+      break;
+  }
+  bool out_of_bounds = false;
+  uint8_t next_tail_x = snake_node->data->x;
+  uint8_t next_tail_y = snake_node->data->y;
+  for (int i = 1; i < NEW_SNAKE_LENGTH; ++i) {
+    if ((next_tail_x + tail_offset_x) < 0 || (next_tail_x + tail_offset_x) >= GRID_WIDTH
+        || (next_tail_y + tail_offset_y) < 0 || (next_tail_y + tail_offset_y) >= GRID_HEIGHT) {
+      out_of_bounds = true;
+      break;
+    }
+    next_tail_x += tail_offset_x;
+    next_tail_y += tail_offset_y;
+  }
+  if (out_of_bounds) {
+  } else {
+    next_tail_x = snake_node->data->x;
+    next_tail_y = snake_node->data->y;
+    sn_queue_insert(snake_node->data);
+    ec_list_remove_cell_node(snake_node);
+    for (int i = 1; i < NEW_SNAKE_LENGTH; ++i) {
+      next_tail_x += tail_offset_x;
+      next_tail_y += tail_offset_y;
+      snake_node = ec_list_get_node(xy_to_index(next_tail_x, next_tail_y));
+    }
+    return true;
+  }
 }
 
 static inline void place_snake_node() {
@@ -381,6 +448,8 @@ void reset() {
   }
   // reset empty cell list
   ec_list_reset_filled();
+  // create snake
+  create_snake();
   // place food
 //    place_segment(&food_, 1, 5);
 //    // reset snake length
@@ -469,14 +538,11 @@ bool handle_move() {
   // Is the game won?
   // TODO: should game win check be handled at eating stage???
   if (sn_queue_is_full()) {
-    // TODO: Using sn_queue_is_full() includes two spots on the Ergodox-EZ grid that do not have LEDs...
-    //  should this be modified back to old LED_COUNT check logic?
     // Snake length has reached the total amount of LEDs available without encountering an invalid move.
     // Game is won. No further work to be done.
     game_state_ = WIN;
   }
 
-  // TODO: Is there any work we need to do here related to directional changes / player input ?
   return true;
 }
 

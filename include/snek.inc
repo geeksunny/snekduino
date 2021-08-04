@@ -8,8 +8,10 @@
 #define MAX_QUEUE_SIZE GRID_HEIGHT * GRID_WIDTH
 #define MAX_LIST_SIZE MAX_QUEUE_SIZE
 
-#define TICK_MS_RUNNING 1000
-#define TICK_MS_RESET 5000
+#define TICK_MS_RUNNING_START   1000
+#define TICK_MS_RUNNING_FINISH  500
+#define TICK_MS_RESET           5000
+#define TICK_MS_RUNNING_STEP    ((TICK_MS_RUNNING_START - TICK_MS_RUNNING_FINISH) / (MAX_QUEUE_SIZE))
 
 enum Direction {
   NONE, UP, LEFT, DOWN, RIGHT
@@ -97,7 +99,7 @@ static enum Direction next_direction_ = NONE;
 static enum GameState game_state_ = RESET;
 
 static unsigned long last_tick_ = 0;
-static unsigned long tick_length_ = TICK_MS_RUNNING;
+static unsigned long tick_length_ = TICK_MS_RUNNING_START;
 
 
 /* Decimal Index -> X/Y Grid Location */
@@ -362,7 +364,7 @@ static inline void place_snake_node() {
 }
 
 static inline void reset_tick_length() {
-  tick_length_ = TICK_MS_RUNNING;
+  tick_length_ = TICK_MS_RUNNING_START;
 }
 
 static inline void extend_tick_length() {
@@ -413,6 +415,8 @@ void eat_food(snake_t* food_loc) {
   food_loc->is_food = false;
   // Add the new head to the snake
   sn_queue_insert(food_loc);
+  // Decrement the tick-length to speed the game up
+  tick_length_ -= TICK_MS_RUNNING_STEP;
 }
 
 bool handle_move() {

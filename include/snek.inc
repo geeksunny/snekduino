@@ -503,7 +503,7 @@ void handle_tick() {
 }
 
 void snake_exec() {
-  if (millis() - last_tick_ < tick_length_) {
+  if (millis() - last_tick_ >= tick_length_) {
     handle_tick();
   }
   // todo: render LEDs out from led_map_ as a normal RGB effect.

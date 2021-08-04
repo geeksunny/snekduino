@@ -95,8 +95,6 @@ void loop() {
   FastLED.show();
   FastLED.delay(1000 / REFRESH_RATE);
 
-  snake_exec();
-
   inputKey = readInput();
   switch (inputKey) {
     case KeyboardInput::UP:
@@ -116,4 +114,6 @@ void loop() {
     case KeyboardInput::NONE:
       break;
   }
+
+  snake_exec();
 }

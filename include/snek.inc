@@ -384,18 +384,18 @@ bool create_snake() {
   switch (direction_) {
     case UP:
       tail_offset_x = 0;
-      tail_offset_y = 1;
+      tail_offset_y = -1;
       break;
     case LEFT:
-      tail_offset_x = -1;
+      tail_offset_x = 1;
       tail_offset_y = 0;
       break;
     case DOWN:
       tail_offset_x = 0;
-      tail_offset_y = -1;
+      tail_offset_y = 1;
       break;
     case RIGHT:
-      tail_offset_x = 1;
+      tail_offset_x = -1;
       tail_offset_y = 0;
       break;
   }
@@ -412,18 +412,21 @@ bool create_snake() {
     next_tail_y += tail_offset_y;
   }
   if (out_of_bounds) {
-  } else {
-    next_tail_x = snake_node->data->x;
-    next_tail_y = snake_node->data->y;
+    // Re-focus the starting node.
+    snake_node = ec_list_get_node(xy_to_index((next_tail_x - (tail_offset_x * (NEW_SNAKE_LENGTH - 1))),
+                                              (next_tail_y - (tail_offset_y * (NEW_SNAKE_LENGTH - 1)))));
+  }
+  next_tail_x = snake_node->data->x;
+  next_tail_y = snake_node->data->y;
+  for (int i = 0; i < NEW_SNAKE_LENGTH; ++i) {
+    snake_node->data->is_enabled = true;
     sn_queue_insert(snake_node->data);
     ec_list_remove_cell_node(snake_node);
-    for (int i = 1; i < NEW_SNAKE_LENGTH; ++i) {
-      next_tail_x += tail_offset_x;
-      next_tail_y += tail_offset_y;
-      snake_node = ec_list_get_node(xy_to_index(next_tail_x, next_tail_y));
-    }
-    return true;
+    next_tail_x += tail_offset_x;
+    next_tail_y += tail_offset_y;
+    snake_node = ec_list_get_node(xy_to_index(next_tail_x, next_tail_y));
   }
+  return true;
 }
 
 static inline void place_snake_node() {

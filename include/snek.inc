@@ -2,12 +2,12 @@
 #include <time.h>
 
 /** Snake & Queue data types, values, constants **/
-#define GRID_HEIGHT       5
-#define GRID_WIDTH        14
-#define NEW_SNAKE_LENGTH  3
+#define GRID_HEIGHT             5
+#define GRID_WIDTH              14
+#define NEW_SNAKE_LENGTH        3
 
-#define MAX_QUEUE_SIZE GRID_HEIGHT * GRID_WIDTH
-#define MAX_LIST_SIZE MAX_QUEUE_SIZE
+#define MAX_QUEUE_SIZE          GRID_HEIGHT * GRID_WIDTH
+#define MAX_LIST_SIZE           MAX_QUEUE_SIZE
 
 #define TICK_MS_RUNNING_START   1000
 #define TICK_MS_RUNNING_FINISH  500
@@ -413,8 +413,8 @@ bool create_snake() {
   }
   if (out_of_bounds) {
     // Re-focus the starting node.
-    snake_node = ec_list_get_node(xy_to_index((next_tail_x - (tail_offset_x * (NEW_SNAKE_LENGTH - 1))),
-                                              (next_tail_y - (tail_offset_y * (NEW_SNAKE_LENGTH - 1)))));
+    snake_node = &empty_cell_pool_[xy_to_index((next_tail_x - (tail_offset_x * (NEW_SNAKE_LENGTH - 1))),
+                                               (next_tail_y - (tail_offset_y * (NEW_SNAKE_LENGTH - 1))))];
   }
   next_tail_x = snake_node->data->x;
   next_tail_y = snake_node->data->y;
@@ -424,7 +424,7 @@ bool create_snake() {
     ec_list_remove_cell_node(snake_node);
     next_tail_x += tail_offset_x;
     next_tail_y += tail_offset_y;
-    snake_node = ec_list_get_node(xy_to_index(next_tail_x, next_tail_y));
+    snake_node = &empty_cell_pool_[xy_to_index(next_tail_x, next_tail_y)];
   }
   return true;
 }

@@ -151,11 +151,11 @@ snake_t* sn_queue_remove() {
 }
 
 snake_t* sn_queue_peek_front() {
-  return *snake_queue_.array + snake_queue_.front;
+  return *(snake_queue_.array + snake_queue_.front);
 }
 
 snake_t* sn_queue_peek_rear() {
-  return *snake_queue_.array + snake_queue_.rear;
+  return *(snake_queue_.array + (snake_queue_.rear - 1));
 }
 
 

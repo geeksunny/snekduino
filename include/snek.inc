@@ -399,32 +399,25 @@ bool create_snake() {
       tail_offset_y = 0;
       break;
   }
-  bool out_of_bounds = false;
-  uint8_t next_tail_x = snake_node->data->x;
-  uint8_t next_tail_y = snake_node->data->y;
-  for (int i = 1; i < NEW_SNAKE_LENGTH; ++i) {
-    if ((next_tail_x + tail_offset_x) < 0 || (next_tail_x + tail_offset_x) >= GRID_WIDTH
-        || (next_tail_y + tail_offset_y) < 0 || (next_tail_y + tail_offset_y) >= GRID_HEIGHT) {
-      out_of_bounds = true;
-      break;
-    }
-    next_tail_x += tail_offset_x;
-    next_tail_y += tail_offset_y;
+  int8_t tail_x = snake_node->data->x + (tail_offset_x * NEW_SNAKE_LENGTH);
+  int8_t tail_y = snake_node->data->y + (tail_offset_y * NEW_SNAKE_LENGTH);
+  if (tail_x < 0) {
+    tail_x = 0;
+  } else if (tail_x >= GRID_WIDTH) {
+    tail_x = GRID_WIDTH - 1;
   }
-  if (out_of_bounds) {
-    // Re-focus the starting node.
-    snake_node = &empty_cell_pool_[xy_to_index((next_tail_x - (tail_offset_x * (NEW_SNAKE_LENGTH - 1))),
-                                               (next_tail_y - (tail_offset_y * (NEW_SNAKE_LENGTH - 1))))];
+  if (tail_y < 0) {
+    tail_y = 0;
+  } else if (tail_y >= GRID_HEIGHT) {
+    tail_y = GRID_HEIGHT - 1;
   }
-  next_tail_x = snake_node->data->x;
-  next_tail_y = snake_node->data->y;
   for (int i = 0; i < NEW_SNAKE_LENGTH; ++i) {
+    snake_node = &empty_cell_pool_[xy_to_index(tail_x, tail_y)];
     snake_node->data->is_enabled = true;
     sn_queue_insert(snake_node->data);
     ec_list_remove_cell_node(snake_node);
-    next_tail_x += tail_offset_x;
-    next_tail_y += tail_offset_y;
-    snake_node = &empty_cell_pool_[xy_to_index(next_tail_x, next_tail_y)];
+    tail_x -= tail_offset_x;
+    tail_y -= tail_offset_y;
   }
   return true;
 }
@@ -596,9 +589,9 @@ void snake_render() {
         if (grid_[x][y].is_food) {
           Serial.print('F');
         } else {
-          if (&grid_[x][y] == snake_queue_.array[snake_queue_.front]) {
+          if (&grid_[x][y] == snake_queue_.array[snake_queue_.rear - 1]) {
             Serial.print('H');
-          } else if (&grid_[x][y] == snake_queue_.array[snake_queue_.rear]) {
+          } else if (&grid_[x][y] == snake_queue_.array[snake_queue_.front]) {
             Serial.print('T');
           } else {
             Serial.print('B');

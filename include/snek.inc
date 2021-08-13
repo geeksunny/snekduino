@@ -142,6 +142,15 @@ bool sn_queue_insert(snake_t* element) {
   return true;
 }
 
+void sn_queue_clear() {
+  if (sn_queue_is_empty()) {
+    return;
+  }
+  snake_queue_.count = 0;
+  snake_queue_.front = 0;
+  snake_queue_.rear = 0;
+}
+
 // front = dequeue = read
 snake_t* sn_queue_remove() {
   snake_t* result = *(snake_queue_.array + snake_queue_.front);
@@ -351,11 +360,12 @@ list_node_t* get_random_empty_cell() {
   return ec_list_get_node(index);
 }
 
-snake_t* pick_next_food_loc() {
+void pick_and_set_next_food_loc() {
   // TODO: Test if the node is too close to snake??
   list_node_t* node = get_random_empty_cell();
+  node->data->is_food = 1;
+  node->data->is_enabled = 1;
   ec_list_remove_cell_node(node);
-  return node->data;
 }
 
 bool create_snake() {
@@ -413,7 +423,7 @@ bool create_snake() {
   }
   for (int i = 0; i < NEW_SNAKE_LENGTH; ++i) {
     snake_node = &empty_cell_pool_[xy_to_index(tail_x, tail_y)];
-    snake_node->data->is_enabled = true;
+    snake_node->data->is_enabled = 1;
     sn_queue_insert(snake_node->data);
     ec_list_remove_cell_node(snake_node);
     tail_x -= tail_offset_x;
@@ -435,6 +445,8 @@ static inline void extend_tick_length() {
 }
 
 void reset() {
+  // reset snake list
+  sn_queue_clear();
   // reset the grid nodes
   for (uint8_t x = 0; x < GRID_WIDTH; ++x) {
     for (uint8_t y = 0; y < GRID_HEIGHT; ++y) {
@@ -447,37 +459,28 @@ void reset() {
   // create snake
   create_snake();
   // place food
-//    place_segment(&food_, 1, 5);
-//    // reset snake length
-//    length_ = 3;
-//    // determine snake placement
-//    uint8_t x = 0;
-//    uint8_t y = 0;
-//    // place initial snake segments
-//    for (uint8_t i = length_ - 1; i >= 0; --i) {
-//      place_segment(&snake_[i], x, y + i);
-//    }
-  // initial direction
-  direction_ = RIGHT;
+  pick_and_set_next_food_loc();
   // game state
   game_state_ = MOVE;
   // Reset tick length to RUNNING duration
   reset_tick_length();
 }
 
-void move_snake(snake_t* new_loc) {
+void move_snake(uint8_t new_x, uint8_t new_y) {
   // Pop the old tail off the queue
   snake_t* old_tail = sn_queue_remove();
-  old_tail->is_enabled = false;
-  // TODO: Old tail needs to be inserted back into the empty-cell list
+  old_tail->is_enabled = 0;
+  ec_list_add_cell_node(&empty_cell_pool_[xy_to_index(old_tail->x, old_tail->y)]);
   // Add the new head to the snake
-  new_loc->is_enabled = true;
-  sn_queue_insert(new_loc);
+  list_node_t* new_loc = &empty_cell_pool_[xy_to_index(new_x, new_y)];
+  new_loc->data->is_enabled = 1;
+  ec_list_remove_cell_node(new_loc);
+  sn_queue_insert(new_loc->data);
 }
 
 void eat_food(snake_t* food_loc) {
   // Disable the is_food flag
-  food_loc->is_food = false;
+  food_loc->is_food = 0;
   // Add the new head to the snake
   sn_queue_insert(food_loc);
   // Decrement the tick-length to speed the game up
@@ -523,6 +526,8 @@ bool handle_move() {
     if (grid_[nextX][nextY].is_food) {
       // Eating the food!
       eat_food(&grid_[nextX][nextY]);
+      pick_and_set_next_food_loc();
+      return true;
     } else if (&grid_[nextX][nextY] != sn_queue_peek_front()) {
       // Not the food and not the end of the tail; collision with snake body.
       game_state_ = LOSE;
@@ -530,7 +535,7 @@ bool handle_move() {
     }
   }
   // Move is valid.
-  move_snake(&grid_[nextX][nextY]);
+  move_snake(nextX, nextY);
   // Is the game won?
   // TODO: should game win check be handled at eating stage???
   if (sn_queue_is_full()) {
